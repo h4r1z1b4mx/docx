@@ -2,8 +2,7 @@ import { Document as DocxDocument, Packer, Paragraph, TextRun, HeadingLevel, Ali
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import TurndownService from 'turndown';
-import { Document, ContentBlock, ExportFormat, ExportOptions } from '../types';
+import { Document, ContentBlock, ExportOptions } from '../types';
 
 export class DocumentExporter {
   private document: Document;
@@ -82,7 +81,7 @@ export class DocumentExporter {
     });
 
     const buffer = await Packer.toBuffer(doc);
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const blob = new Blob([new Uint8Array(buffer)], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
     saveAs(blob, `${this.document.title.replace(/\s+/g, '_')}.docx`);
   }
 
@@ -92,7 +91,7 @@ export class DocumentExporter {
     switch (block.type) {
       case 'heading':
         const level = Math.min(block.metadata?.level || 1, 6) as 1 | 2 | 3 | 4 | 5 | 6;
-        const headingLevels: Record<number, HeadingLevel> = {
+        const headingLevels = {
           1: HeadingLevel.HEADING_1,
           2: HeadingLevel.HEADING_2,
           3: HeadingLevel.HEADING_3,
@@ -124,7 +123,7 @@ export class DocumentExporter {
         });
 
       case 'list':
-        return block.content.split('\n').map((item, index) => 
+        return block.content.split('\n').map((item) => 
           new Paragraph({
             text: item,
             bullet: {
@@ -173,12 +172,18 @@ export class DocumentExporter {
           alignment: AlignmentType.CENTER,
         });
 
+      case 'pagebreak':
+        return new Paragraph({
+          text: '',
+          pageBreakBefore: true,
+        });
+
       default:
         return null;
     }
   }
 
-  private getDocxAlignment(textAlign: string): AlignmentType {
+  private getDocxAlignment(textAlign: string) {
     switch (textAlign) {
       case 'center': return AlignmentType.CENTER;
       case 'right': return AlignmentType.RIGHT;
@@ -191,13 +196,14 @@ export class DocumentExporter {
     // Create a temporary div with the document content
     const tempDiv = document.createElement('div');
     tempDiv.style.width = '210mm'; // A4 width
-    tempDiv.style.minHeight = '297mm'; // A4 height
     tempDiv.style.padding = `${this.document.settings.pageMargins}pt`;
     tempDiv.style.backgroundColor = 'white';
     tempDiv.style.fontFamily = this.document.settings.fontFamily;
     tempDiv.style.position = 'absolute';
     tempDiv.style.left = '-9999px';
     tempDiv.style.top = '0';
+    tempDiv.style.fontSize = '12px';
+    tempDiv.style.lineHeight = '1.6';
 
     // Add title
     if (this.document.title) {
@@ -205,6 +211,9 @@ export class DocumentExporter {
       titleEl.textContent = this.document.title;
       titleEl.style.textAlign = 'center';
       titleEl.style.marginBottom = '20px';
+      titleEl.style.fontSize = '20px';
+      titleEl.style.fontWeight = 'bold';
+      titleEl.style.pageBreakAfter = 'avoid';
       tempDiv.appendChild(titleEl);
     }
 
@@ -212,6 +221,11 @@ export class DocumentExporter {
     this.document.blocks.forEach(block => {
       const blockEl = this.blockToHtml(block);
       if (blockEl) {
+        // Add page break handling for certain block types
+        if (block.type === 'heading' && block.metadata?.level === 1) {
+          blockEl.style.pageBreakBefore = 'auto';
+          blockEl.style.pageBreakAfter = 'avoid';
+        }
         tempDiv.appendChild(blockEl);
       }
     });
@@ -219,24 +233,67 @@ export class DocumentExporter {
     document.body.appendChild(tempDiv);
 
     try {
+      // Get the actual height of the content
+      const a4Width = 595.28; // A4 width in points (210mm)
+      const a4Height = 841.89; // A4 height in points (297mm)
+      
+      const pdf = new jsPDF({
+        orientation: this.document.settings.pageOrientation,
+        unit: 'pt',
+        format: 'a4',
+      });
+
+      // Calculate page dimensions
+      const pageHeight = a4Height - (this.document.settings.pageMargins * 2);
+
+      // Use html2canvas to capture the content
       const canvas = await html2canvas(tempDiv, {
-        scale: 2,
+        scale: 1.5,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
+        width: tempDiv.offsetWidth,
+        height: tempDiv.offsetHeight,
+        scrollX: 0,
+        scrollY: 0,
       });
 
       const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: this.document.settings.pageOrientation,
-        unit: 'mm',
-        format: this.document.settings.pageSize.toLowerCase() as 'a4' | 'letter' | 'legal',
-      });
-
-      const imgWidth = pdf.internal.pageSize.getWidth();
+      const imgWidth = a4Width - (this.document.settings.pageMargins * 2);
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      // If content fits on one page
+      if (imgHeight <= pageHeight) {
+        pdf.addImage(imgData, 'PNG', this.document.settings.pageMargins, this.document.settings.pageMargins, imgWidth, imgHeight);
+      } else {
+        // Split content across multiple pages
+        const pageRatio = pageHeight / imgHeight;
+        const totalPages = Math.ceil(1 / pageRatio);
+        
+        for (let i = 0; i < totalPages; i++) {
+          if (i > 0) {
+            pdf.addPage();
+          }
+          
+          const sourceY = i * pageHeight * (canvas.height / imgHeight);
+          const sourceHeight = Math.min(pageHeight * (canvas.height / imgHeight), canvas.height - sourceY);
+          
+          // Create a temporary canvas for this page
+          const pageCanvas = document.createElement('canvas');
+          const pageCtx = pageCanvas.getContext('2d');
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = sourceHeight;
+          
+          if (pageCtx) {
+            pageCtx.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
+            const pageImgData = pageCanvas.toDataURL('image/png');
+            const pageImgHeight = (sourceHeight * imgWidth) / canvas.width;
+            
+            pdf.addImage(pageImgData, 'PNG', this.document.settings.pageMargins, this.document.settings.pageMargins, imgWidth, pageImgHeight);
+          }
+        }
+      }
+
       pdf.save(`${this.document.title.replace(/\s+/g, '_')}.pdf`);
     } finally {
       document.body.removeChild(tempDiv);
@@ -410,6 +467,11 @@ export class DocumentExporter {
         hr.style.cssText = style;
         return hr;
 
+      case 'pagebreak':
+        const pageBreak = document.createElement('div');
+        pageBreak.style.cssText = 'page-break-before: always; height: 0; margin: 0; padding: 0;';
+        return pageBreak;
+
       default:
         return null;
     }
@@ -449,6 +511,9 @@ export class DocumentExporter {
       case 'divider':
         return `<hr ${style}>`;
 
+      case 'pagebreak':
+        return `<div style="page-break-before: always; height: 0; margin: 0; padding: 0;"></div>`;
+
       default:
         return null;
     }
@@ -472,6 +537,9 @@ export class DocumentExporter {
 
       case 'divider':
         return '---';
+
+      case 'pagebreak':
+        return '\n\n--- PAGE BREAK ---\n\n';
 
       default:
         return null;
@@ -499,6 +567,9 @@ export class DocumentExporter {
       case 'divider':
         return '\\hrule';
 
+      case 'pagebreak':
+        return '\\newpage';
+
       default:
         return null;
     }
@@ -515,7 +586,6 @@ export class DocumentExporter {
         return block.content;
 
       case 'list':
-        const prefix = block.metadata?.listType === 'numbered' ? '1.' : '•';
         return block.content.split('\n').map((item, index) => 
           block.metadata?.listType === 'numbered' ? `${index + 1}. ${item}` : `• ${item}`
         ).join('\n');
@@ -525,6 +595,9 @@ export class DocumentExporter {
 
       case 'divider':
         return '---';
+
+      case 'pagebreak':
+        return '\n\n=== NEW PAGE ===\n\n';
 
       default:
         return null;

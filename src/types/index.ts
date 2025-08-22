@@ -1,6 +1,6 @@
 export interface ContentBlock {
   id: string;
-  type: 'heading' | 'paragraph' | 'list' | 'image' | 'divider' | 'table' | 'quote';
+  type: 'heading' | 'paragraph' | 'list' | 'image' | 'divider' | 'table' | 'quote' | 'pagebreak';
   content: string;
   style: {
     fontSize: number;
@@ -60,4 +60,74 @@ export interface ExportOptions {
   includeStyles: boolean;
   pageBreaks: boolean;
   tableOfContents: boolean;
+}
+
+// Academic Report Types
+export interface StudentInfo {
+  name: string;
+  registerNumber: string;
+  department: string;
+  year?: string;
+  section?: string;
+}
+
+export interface SupervisorInfo {
+  name: string;
+  designation: string;
+  department: string;
+}
+
+export interface HodInfo {
+  name: string;
+  department: string;
+}
+
+export interface IndustryGuideInfo {
+  name: string;
+  designation: string;
+  company: string;
+}
+
+export interface Reference {
+  authors: string[];
+  title: string;
+  journal?: string;
+  conference?: string;
+  year: number;
+  pages?: string;
+  publisher?: string;
+  volume?: string;
+  issue?: string;
+  doi?: string;
+  url?: string;
+}
+
+export interface AcademicReportData {
+  projectTitle: string;
+  projectType: 'Major Project' | 'Mini Project' | 'Internship Report' | 'Thesis';
+  academicYear: string;
+  submissionDate: string;
+  students: StudentInfo[];
+  supervisor: SupervisorInfo;
+  hod: HodInfo;
+  industryGuide?: IndustryGuideInfo;
+  abstract: {
+    background: string;
+    objectives: string;
+    methodology: string;
+    results: string;
+    conclusions: string;
+    keywords: string[];
+  };
+  chapters: {
+    introduction: string;
+    literatureSurvey: string;
+    objectives: string;
+    methodology: string;
+    proposedWork: string;
+    results: string;
+    conclusions: string;
+    futureWork: string;
+  };
+  references: Reference[];
 }

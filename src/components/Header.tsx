@@ -1,5 +1,5 @@
 import React from 'react';
-import { Save, Download, Settings, FileText, Undo, Redo } from 'lucide-react';
+import { Save, Download, Settings, FileText, Undo, Redo, Layout } from 'lucide-react';
 
 interface HeaderProps {
   documentTitle: string;
@@ -7,6 +7,7 @@ interface HeaderProps {
   onSave: () => void;
   onExport: () => void;
   onSettings: () => void;
+  onTemplates?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -15,6 +16,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSave,
   onExport,
   onSettings,
+  onTemplates,
 }) => {
   return (
     <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm">
@@ -61,6 +63,16 @@ export const Header: React.FC<HeaderProps> = ({
           <Save className="w-4 h-4" />
           <span className="text-sm font-medium">Save</span>
         </button>
+
+        {onTemplates && (
+          <button
+            onClick={onTemplates}
+            className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <Layout className="w-4 h-4" />
+            <span className="text-sm font-medium">Templates</span>
+          </button>
+        )}
 
         <button
           onClick={onExport}

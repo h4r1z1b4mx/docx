@@ -6,6 +6,7 @@ import { Toolbar } from './components/Toolbar';
 import { Editor } from './components/Editor';
 import { Preview } from './components/Preview';
 import { ExportModal } from './components/ExportModal';
+import TemplateSelection from './components/TemplateSelection';
 import { useDocument } from './hooks/useDocument';
 
 function App() {
@@ -17,10 +18,10 @@ function App() {
     addBlock,
     updateBlock,
     deleteBlock,
-    moveBlock,
   } = useDocument();
 
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showTemplateSelection, setShowTemplateSelection] = useState(false);
 
   const selectedBlock = document.blocks.find(block => block.id === selectedBlockId) || null;
 
@@ -29,14 +30,21 @@ function App() {
     localStorage.setItem(`document-${document.id}`, JSON.stringify(document));
     
     // Show a brief success message
-    const notification = document.createElement('div');
+    const notification = window.document.createElement('div');
     notification.className = 'fixed top-4 right-4 bg-accent-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-slide-in';
     notification.textContent = 'Document saved successfully!';
-    document.body.appendChild(notification);
+    window.document.body.appendChild(notification);
     
     setTimeout(() => {
-      document.body.removeChild(notification);
+      window.document.body.removeChild(notification);
     }, 3000);
+  };
+
+  const handleTemplateSelect = (templateDocument: import('./types').Document) => {
+    updateDocument({
+      title: templateDocument.title,
+      blocks: templateDocument.blocks
+    });
   };
 
   const handleUpdateSelectedBlock = (updates: Partial<import('./types').ContentBlock>) => {
@@ -60,6 +68,7 @@ function App() {
           onSave={handleSave}
           onExport={() => setShowExportModal(true)}
           onSettings={() => {}}
+          onTemplates={() => setShowTemplateSelection(true)}
         />
         
         <div className="flex-1 flex overflow-hidden">
@@ -85,6 +94,12 @@ function App() {
           isOpen={showExportModal}
           onClose={() => setShowExportModal(false)}
           document={document}
+        />
+
+        <TemplateSelection
+          isOpen={showTemplateSelection}
+          onClose={() => setShowTemplateSelection(false)}
+          onSelectTemplate={handleTemplateSelect}
         />
       </div>
     </DndProvider>
