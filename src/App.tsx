@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Header } from './components/Header';
@@ -7,6 +7,7 @@ import { Editor } from './components/Editor';
 import { Preview } from './components/Preview';
 import { ExportModal } from './components/ExportModal';
 import TemplateSelection from './components/TemplateSelection';
+import { Homepage } from './components/Homepage';
 import { useDocument } from './hooks/useDocument';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
 
   const [showExportModal, setShowExportModal] = useState(false);
   const [showTemplateSelection, setShowTemplateSelection] = useState(false);
+  const [showHomepage, setShowHomepage] = useState(true);
 
   const selectedBlock = document.blocks.find(block => block.id === selectedBlockId) || null;
 
@@ -45,6 +47,11 @@ function App() {
       title: templateDocument.title,
       blocks: templateDocument.blocks
     });
+    setShowHomepage(false); // Switch to editor view
+  };
+
+  const handleStartProject = () => {
+    setShowTemplateSelection(true);
   };
 
   const handleUpdateSelectedBlock = (updates: Partial<import('./types').ContentBlock>) => {
@@ -61,47 +68,51 @@ function App() {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="h-screen flex flex-col bg-gray-50">
-        <Header
-          documentTitle={document.title}
-          onTitleChange={(title) => updateDocument({ title })}
-          onSave={handleSave}
-          onExport={() => setShowExportModal(true)}
-          onSettings={() => {}}
-          onTemplates={() => setShowTemplateSelection(true)}
-        />
-        
-        <div className="flex-1 flex overflow-hidden">
-          <Toolbar
-            selectedBlock={selectedBlock}
-            onUpdateBlock={handleUpdateSelectedBlock}
-            onAddBlock={addBlock}
-            onDeleteBlock={handleDeleteSelectedBlock}
+      {showHomepage ? (
+        <Homepage onStartProject={handleStartProject} />
+      ) : (
+        <div className="h-screen flex flex-col bg-gray-50">
+          <Header
+            documentTitle="Visual Document Editor"
+            onTitleChange={(title) => updateDocument({ title })}
+            onSave={handleSave}
+            onExport={() => setShowExportModal(true)}
+            onSettings={() => {}}
+            onTemplates={() => setShowTemplateSelection(true)}
           />
           
-          <Editor
+          <div className="flex-1 flex overflow-hidden">
+            <Toolbar
+              selectedBlock={selectedBlock}
+              onUpdateBlock={handleUpdateSelectedBlock}
+              onAddBlock={addBlock}
+              onDeleteBlock={handleDeleteSelectedBlock}
+            />
+            
+            <Editor
+              document={document}
+              selectedBlockId={selectedBlockId}
+              onSelectBlock={setSelectedBlockId}
+              onUpdateBlock={updateBlock}
+              onDeleteBlock={deleteBlock}
+            />
+            
+            <Preview document={document} />
+          </div>
+
+          <ExportModal
+            isOpen={showExportModal}
+            onClose={() => setShowExportModal(false)}
             document={document}
-            selectedBlockId={selectedBlockId}
-            onSelectBlock={setSelectedBlockId}
-            onUpdateBlock={updateBlock}
-            onDeleteBlock={deleteBlock}
           />
-          
-          <Preview document={document} />
         </div>
+      )}
 
-        <ExportModal
-          isOpen={showExportModal}
-          onClose={() => setShowExportModal(false)}
-          document={document}
-        />
-
-        <TemplateSelection
-          isOpen={showTemplateSelection}
-          onClose={() => setShowTemplateSelection(false)}
-          onSelectTemplate={handleTemplateSelect}
-        />
-      </div>
+      <TemplateSelection
+        isOpen={showTemplateSelection}
+        onClose={() => setShowTemplateSelection(false)}
+        onSelectTemplate={handleTemplateSelect}
+      />
     </DndProvider>
   );
 }
