@@ -78,17 +78,17 @@ export const Editor: React.FC<EditorProps> = ({
       <div className="max-w-4xl mx-auto py-8 px-6 space-y-12">
         {pages.length === 0 ? (
           // Empty document - show single empty page
-          <div className="bg-white shadow-2xl rounded-2xl min-h-[800px] p-12 relative border border-gray-100" style={{ aspectRatio: '8.5/11' }}>
-            <div className="text-center text-gray-600 py-20">
-              <div className="text-6xl mb-4">📝</div>
-              <h3 className="text-xl font-bold text-black mb-2">Start creating your document</h3>
-              <p className="text-gray-500">Add content blocks using the toolbar on the left</p>
+          <div className="bg-white shadow-lg md:shadow-2xl rounded-lg md:rounded-2xl min-h-[600px] md:min-h-[800px] p-6 md:p-12 relative border border-gray-100 mx-4 md:mx-0" style={{ aspectRatio: '8.5/11' }}>
+            <div className="text-center text-gray-600 py-16 md:py-20">
+              <div className="text-4xl md:text-6xl mb-4">📝</div>
+              <h3 className="text-lg md:text-xl font-bold text-black mb-2">Start creating your document</h3>
+              <p className="text-sm md:text-base text-gray-500">Add content blocks using the toolbar</p>
             </div>
             {onAddBlock && (
-              <div className="absolute bottom-6 right-6">
+              <div className="absolute bottom-3 md:bottom-6 right-3 md:right-6 left-3 md:left-auto">
                 <button
                   onClick={() => handleAddBlockToPage('paragraph', 0)}
-                  className="bg-black text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-800 transition-colors shadow-lg font-medium"
+                  className="bg-black text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-800 transition-colors shadow-lg font-medium w-full md:w-auto"
                 >
                   + Add Content
                 </button>
@@ -100,10 +100,10 @@ export const Editor: React.FC<EditorProps> = ({
             {pages.map((page, pageIndex) => (
               <div
                 key={pageIndex}
-                className="bg-white shadow-2xl rounded-2xl min-h-[800px] p-12 relative border border-gray-100"
+                className="bg-white shadow-lg md:shadow-2xl rounded-lg md:rounded-2xl min-h-[600px] md:min-h-[800px] p-6 md:p-12 relative border border-gray-100 mx-4 md:mx-0"
                 style={{ aspectRatio: '8.5/11' }}
               >
-                <div className="space-y-2">
+                <div className="space-y-1 md:space-y-2">
                   {page.map((block) => (
                     <ContentBlock
                       key={block.id}
@@ -117,14 +117,16 @@ export const Editor: React.FC<EditorProps> = ({
                 </div>
                 
                 {/* Page info and add button */}
-                <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center">
+                <div className="absolute bottom-3 md:bottom-6 left-3 md:left-6 right-3 md:right-6 flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0">
                   <span className="text-xs text-gray-500 font-medium">
                     Page {pageIndex + 1} of {pages.length}
-                    {(() => {
-                      const currentPageHeight = page.reduce((total, block) => total + (block.height || 100), 0);
-                      const remainingSpace = PAGE_HEIGHT - currentPageHeight;
-                      return ` • ${remainingSpace}px remaining`;
-                    })()}
+                    <span className="hidden md:inline">
+                      {(() => {
+                        const currentPageHeight = page.reduce((total, block) => total + (block.height || 100), 0);
+                        const remainingSpace = PAGE_HEIGHT - currentPageHeight;
+                        return ` • ${remainingSpace}px remaining`;
+                      })()}
+                    </span>
                   </span>
                   
                   {onAddBlock && (

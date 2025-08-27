@@ -16,7 +16,8 @@ import {
   Quote,
   Table,
   Strikethrough,
-  FileText
+  FileText,
+  X
 } from 'lucide-react';
 import { ContentBlock } from '../types';
 
@@ -25,6 +26,7 @@ interface ToolbarProps {
   onUpdateBlock: (updates: Partial<ContentBlock>) => void;
   onAddBlock: (type: ContentBlock['type']) => void;
   onDeleteBlock: () => void;
+  onClose?: () => void;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
@@ -32,6 +34,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onUpdateBlock,
   onAddBlock,
   onDeleteBlock,
+  onClose,
 }) => {
   const updateStyle = (styleUpdate: Partial<ContentBlock['style']>) => {
     if (!selectedBlock) return;
@@ -51,70 +54,83 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   };
 
   return (
-    <div className="w-80 bg-white border-r border-gray-100 flex flex-col h-full shadow-sm">
+    <div className="w-full md:w-80 bg-white border-r border-gray-100 flex flex-col h-full shadow-sm">
+      {/* Mobile Header with Close Button */}
+      {onClose && (
+        <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50">
+          <h2 className="text-lg font-bold text-black">Tools</h2>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-600 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+      
       {/* Add Content Section */}
       <div className="p-4 border-b border-gray-100">
         <h3 className="text-sm font-bold text-black mb-3">Add Content</h3>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           <button
             onClick={() => onAddBlock('heading')}
-            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
+            className="flex flex-col items-center p-2 md:p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
           >
-            <Type className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
+            <Type className="w-4 md:w-5 h-4 md:h-5 text-gray-700 group-hover:text-black mb-1" />
             <span className="text-xs text-gray-700 group-hover:text-black font-medium">Heading</span>
           </button>
           
           <button
             onClick={() => onAddBlock('paragraph')}
-            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
+            className="flex flex-col items-center p-2 md:p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
           >
-            <AlignLeft className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
+            <AlignLeft className="w-4 md:w-5 h-4 md:h-5 text-gray-700 group-hover:text-black mb-1" />
             <span className="text-xs text-gray-700 group-hover:text-black font-medium">Text</span>
           </button>
           
           <button
             onClick={() => onAddBlock('list')}
-            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
+            className="flex flex-col items-center p-2 md:p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
           >
-            <List className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
+            <List className="w-4 md:w-5 h-4 md:h-5 text-gray-700 group-hover:text-black mb-1" />
             <span className="text-xs text-gray-700 group-hover:text-black font-medium">List</span>
           </button>
           
           <button
             onClick={() => onAddBlock('quote')}
-            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
+            className="flex flex-col items-center p-2 md:p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
           >
-            <Quote className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
+            <Quote className="w-4 md:w-5 h-4 md:h-5 text-gray-700 group-hover:text-black mb-1" />
             <span className="text-xs text-gray-700 group-hover:text-black font-medium">Quote</span>
           </button>
           
           <button
             onClick={() => onAddBlock('table')}
-            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
+            className="flex flex-col items-center p-2 md:p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
           >
-            <Table className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
+            <Table className="w-4 md:w-5 h-4 md:h-5 text-gray-700 group-hover:text-black mb-1" />
             <span className="text-xs text-gray-700 group-hover:text-black font-medium">Table</span>
           </button>
           
           <button
             onClick={() => onAddBlock('image')}
-            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
+            className="flex flex-col items-center p-2 md:p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
           >
-            <Image className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
+            <Image className="w-4 md:w-5 h-4 md:h-5 text-gray-700 group-hover:text-black mb-1" />
             <span className="text-xs text-gray-700 group-hover:text-black font-medium">Image</span>
           </button>
           
           <button
             onClick={() => onAddBlock('divider')}
-            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
+            className="flex flex-col items-center p-2 md:p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm col-span-2 md:col-span-1"
           >
-            <Minus className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
+            <Minus className="w-4 md:w-5 h-4 md:h-5 text-gray-700 group-hover:text-black mb-1" />
             <span className="text-xs text-gray-700 group-hover:text-black font-medium">Divider</span>
           </button>
           
           <button
             onClick={() => onAddBlock('pagebreak')}
-            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
+            className="flex flex-col items-center p-2 md:p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm col-span-2 md:col-span-1"
           >
             <FileText className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
             <span className="text-xs text-gray-700 group-hover:text-black font-medium">Page Break</span>

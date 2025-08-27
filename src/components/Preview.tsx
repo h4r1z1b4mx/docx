@@ -330,7 +330,7 @@ export const Preview: React.FC<PreviewProps> = ({ document }) => {
       )}
 
       {/* Regular Sidebar Preview */}
-      <div className="w-80 lg:w-96 bg-white border-l border-gray-100 flex flex-col h-full shadow-sm">
+      <div className="w-full md:w-80 lg:w-96 bg-white border-l border-gray-100 flex flex-col h-full shadow-sm">
         <div className="p-4 border-b border-gray-100 bg-gray-50">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-black">Live Preview</h3>

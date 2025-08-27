@@ -10,3 +10,60 @@
   -webkit-line-clamp: 2;
   line-clamp: 2;
 }
+
+/* Mobile responsive utilities */
+@media (max-width: 768px) {
+  .mobile-hide {
+    display: none !important;
+  }
+  
+  .mobile-show {
+    display: block !important;
+  }
+  
+  .mobile-full-width {
+    width: 100% !important;
+  }
+  
+  /* Hide scrollbars on mobile for cleaner look */
+  .mobile-hide-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .mobile-hide-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Touch-friendly button sizing */
+@media (max-width: 768px) {
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  button.btn-sm {
+    min-height: 36px;
+    min-width: 36px;
+  }
+}
+
+/* Smooth transitions for mobile interactions */
+.mobile-slide-in {
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+.mobile-slide-in.active {
+  transform: translateX(0);
+}
+
+/* Better mobile text input sizing */
+@media (max-width: 768px) {
+  input[type="text"], 
+  input[type="email"], 
+  textarea {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+  }
+}
