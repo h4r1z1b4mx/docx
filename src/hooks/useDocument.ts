@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Document, ContentBlock } from '../types';
 
@@ -24,14 +24,78 @@ export const useDocument = () => {
   });
 
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  
+  // Undo/Redo functionality
+  const [history, setHistory] = useState<Document[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const isUndoRedoAction = useRef(false);
+
+  // Initialize history with the initial document
+  useEffect(() => {
+    if (history.length === 0) {
+      const initialDoc = {
+        ...document,
+      };
+      setHistory([initialDoc]);
+      setHistoryIndex(0);
+    }
+  }, [document, history.length]);
+
+  const saveToHistory = useCallback((newDocument: Document) => {
+    if (isUndoRedoAction.current) {
+      return;
+    }
+    
+    setHistory(prev => {
+      // Remove any future history if we're not at the end
+      const newHistory = prev.slice(0, historyIndex + 1);
+      // Add the new state
+      const updatedHistory = [...newHistory, { ...newDocument }];
+      // Limit history to 50 items to prevent memory issues
+      return updatedHistory.slice(-50);
+    });
+    
+    setHistoryIndex(prev => prev + 1);
+  }, [historyIndex]);
+
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      isUndoRedoAction.current = true;
+      const previousState = history[historyIndex - 1];
+      setDocument({ ...previousState });
+      setHistoryIndex(prev => prev - 1);
+      // Reset the flag after the next render
+      setTimeout(() => {
+        isUndoRedoAction.current = false;
+      }, 0);
+    }
+  }, [history, historyIndex]);
+
+  const redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      isUndoRedoAction.current = true;
+      const nextState = history[historyIndex + 1];
+      setDocument({ ...nextState });
+      setHistoryIndex(prev => prev + 1);
+      // Reset the flag after the next render
+      setTimeout(() => {
+        isUndoRedoAction.current = false;
+      }, 0);
+    }
+  }, [history, historyIndex]);
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
 
   const updateDocument = useCallback((updates: Partial<Document>) => {
-    setDocument(prev => ({
-      ...prev,
+    const newDocument = {
+      ...document,
       ...updates,
       lastModified: new Date(),
-    }));
-  }, []);
+    };
+    setDocument(newDocument);
+    saveToHistory(newDocument);
+  }, [document, saveToHistory]);
 
   const addBlock = useCallback((type: ContentBlock['type'], index?: number) => {
     const newBlock: ContentBlock = {
@@ -50,61 +114,66 @@ export const useDocument = () => {
       metadata: getDefaultMetadata(type),
     };
 
-    setDocument(prev => {
-      const newBlocks = [...prev.blocks];
-      const insertIndex = index !== undefined ? index : newBlocks.length;
-      newBlocks.splice(insertIndex, 0, newBlock);
-      
-      return {
-        ...prev,
-        blocks: newBlocks,
-        lastModified: new Date(),
-      };
-    });
+    const newDocument = {
+      ...document,
+      blocks: (() => {
+        const newBlocks = [...document.blocks];
+        const insertIndex = index !== undefined ? index : newBlocks.length;
+        newBlocks.splice(insertIndex, 0, newBlock);
+        return newBlocks;
+      })(),
+      lastModified: new Date(),
+    };
 
+    setDocument(newDocument);
+    saveToHistory(newDocument);
     setSelectedBlockId(newBlock.id);
     return newBlock.id;
-  }, []);
+  }, [document, saveToHistory]);
 
   const updateBlock = useCallback((blockId: string, updates: Partial<ContentBlock>) => {
-    setDocument(prev => ({
-      ...prev,
-      blocks: prev.blocks.map(block =>
+    const newDocument = {
+      ...document,
+      blocks: document.blocks.map(block =>
         block.id === blockId ? { ...block, ...updates } : block
       ),
       lastModified: new Date(),
-    }));
-  }, []);
+    };
+    setDocument(newDocument);
+    saveToHistory(newDocument);
+  }, [document, saveToHistory]);
 
   const deleteBlock = useCallback((blockId: string) => {
-    setDocument(prev => ({
-      ...prev,
-      blocks: prev.blocks.filter(block => block.id !== blockId),
+    const newDocument = {
+      ...document,
+      blocks: document.blocks.filter(block => block.id !== blockId),
       lastModified: new Date(),
-    }));
+    };
+    setDocument(newDocument);
+    saveToHistory(newDocument);
     
     if (selectedBlockId === blockId) {
       setSelectedBlockId(null);
     }
-  }, [selectedBlockId]);
+  }, [document, selectedBlockId, saveToHistory]);
 
   const moveBlock = useCallback((blockId: string, newIndex: number) => {
-    setDocument(prev => {
-      const blocks = [...prev.blocks];
-      const blockIndex = blocks.findIndex(block => block.id === blockId);
-      
-      if (blockIndex === -1) return prev;
-      
-      const [movedBlock] = blocks.splice(blockIndex, 1);
-      blocks.splice(newIndex, 0, movedBlock);
-      
-      return {
-        ...prev,
-        blocks,
-        lastModified: new Date(),
-      };
-    });
-  }, []);
+    const blocks = [...document.blocks];
+    const blockIndex = blocks.findIndex(block => block.id === blockId);
+    
+    if (blockIndex === -1) return;
+    
+    const [movedBlock] = blocks.splice(blockIndex, 1);
+    blocks.splice(newIndex, 0, movedBlock);
+    
+    const newDocument = {
+      ...document,
+      blocks,
+      lastModified: new Date(),
+    };
+    setDocument(newDocument);
+    saveToHistory(newDocument);
+  }, [document, saveToHistory]);
 
   return {
     document,
@@ -115,6 +184,10 @@ export const useDocument = () => {
     updateBlock,
     deleteBlock,
     moveBlock,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   };
 };
 

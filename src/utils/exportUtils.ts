@@ -193,110 +193,134 @@ export class DocumentExporter {
   }
 
   private async exportToPdf(): Promise<void> {
-    // Create a temporary div with the document content
-    const tempDiv = document.createElement('div');
-    tempDiv.style.width = '210mm'; // A4 width
-    tempDiv.style.padding = `${this.document.settings.pageMargins}pt`;
-    tempDiv.style.backgroundColor = 'white';
-    tempDiv.style.fontFamily = this.document.settings.fontFamily;
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.left = '-9999px';
-    tempDiv.style.top = '0';
-    tempDiv.style.fontSize = '12px';
-    tempDiv.style.lineHeight = '1.6';
-
-    // Add title
-    if (this.document.title) {
-      const titleEl = document.createElement('h1');
-      titleEl.textContent = this.document.title;
-      titleEl.style.textAlign = 'center';
-      titleEl.style.marginBottom = '20px';
-      titleEl.style.fontSize = '20px';
-      titleEl.style.fontWeight = 'bold';
-      titleEl.style.pageBreakAfter = 'avoid';
-      tempDiv.appendChild(titleEl);
-    }
-
-    // Add blocks
-    this.document.blocks.forEach(block => {
-      const blockEl = this.blockToHtml(block);
-      if (blockEl) {
-        // Add page break handling for certain block types
-        if (block.type === 'heading' && block.metadata?.level === 1) {
-          blockEl.style.pageBreakBefore = 'auto';
-          blockEl.style.pageBreakAfter = 'avoid';
-        }
-        tempDiv.appendChild(blockEl);
-      }
+    const a4Width = 595.28; // A4 width in points (210mm)
+    const a4Height = 841.89; // A4 height in points (297mm)
+    
+    const pdf = new jsPDF({
+      orientation: this.document.settings.pageOrientation,
+      unit: 'pt',
+      format: 'a4',
     });
 
-    document.body.appendChild(tempDiv);
+    // Group blocks into pages based on height
+    const PAGE_HEIGHT = a4Height - (this.document.settings.pageMargins * 2);
+    const pages = this.paginateBlocksForExport(this.document.blocks, PAGE_HEIGHT);
 
-    try {
-      // Get the actual height of the content
-      const a4Width = 595.28; // A4 width in points (210mm)
-      const a4Height = 841.89; // A4 height in points (297mm)
+    // Create a temporary div for each page
+    for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
+      const page = pages[pageIndex];
       
-      const pdf = new jsPDF({
-        orientation: this.document.settings.pageOrientation,
-        unit: 'pt',
-        format: 'a4',
-      });
+      const tempDiv = document.createElement('div');
+      tempDiv.style.width = `${a4Width - (this.document.settings.pageMargins * 2)}pt`;
+      tempDiv.style.padding = `${this.document.settings.pageMargins}pt`;
+      tempDiv.style.backgroundColor = 'white';
+      tempDiv.style.fontFamily = this.document.settings.fontFamily;
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '0';
+      tempDiv.style.fontSize = '12px';
+      tempDiv.style.lineHeight = '1.6';
 
-      // Calculate page dimensions
-      const pageHeight = a4Height - (this.document.settings.pageMargins * 2);
-
-      // Use html2canvas to capture the content
-      const canvas = await html2canvas(tempDiv, {
-        scale: 1.5,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        width: tempDiv.offsetWidth,
-        height: tempDiv.offsetHeight,
-        scrollX: 0,
-        scrollY: 0,
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const imgWidth = a4Width - (this.document.settings.pageMargins * 2);
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      // If content fits on one page
-      if (imgHeight <= pageHeight) {
-        pdf.addImage(imgData, 'PNG', this.document.settings.pageMargins, this.document.settings.pageMargins, imgWidth, imgHeight);
-      } else {
-        // Split content across multiple pages
-        const pageRatio = pageHeight / imgHeight;
-        const totalPages = Math.ceil(1 / pageRatio);
-        
-        for (let i = 0; i < totalPages; i++) {
-          if (i > 0) {
-            pdf.addPage();
-          }
-          
-          const sourceY = i * pageHeight * (canvas.height / imgHeight);
-          const sourceHeight = Math.min(pageHeight * (canvas.height / imgHeight), canvas.height - sourceY);
-          
-          // Create a temporary canvas for this page
-          const pageCanvas = document.createElement('canvas');
-          const pageCtx = pageCanvas.getContext('2d');
-          pageCanvas.width = canvas.width;
-          pageCanvas.height = sourceHeight;
-          
-          if (pageCtx) {
-            pageCtx.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
-            const pageImgData = pageCanvas.toDataURL('image/png');
-            const pageImgHeight = (sourceHeight * imgWidth) / canvas.width;
-            
-            pdf.addImage(pageImgData, 'PNG', this.document.settings.pageMargins, this.document.settings.pageMargins, imgWidth, pageImgHeight);
-          }
-        }
+      // Add title only to the first page
+      if (pageIndex === 0 && this.document.title) {
+        const titleEl = document.createElement('h1');
+        titleEl.textContent = this.document.title;
+        titleEl.style.textAlign = 'center';
+        titleEl.style.marginBottom = '20px';
+        titleEl.style.fontSize = '20px';
+        titleEl.style.fontWeight = 'bold';
+        tempDiv.appendChild(titleEl);
       }
 
-      pdf.save(`${this.document.title.replace(/\s+/g, '_')}.pdf`);
-    } finally {
-      document.body.removeChild(tempDiv);
+      // Add blocks for this page
+      page.forEach(block => {
+        const blockEl = this.blockToHtml(block);
+        if (blockEl) {
+          tempDiv.appendChild(blockEl);
+        }
+      });
+
+      document.body.appendChild(tempDiv);
+
+      try {
+        // Use html2canvas to capture the content
+        const canvas = await html2canvas(tempDiv, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: 'white',
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = a4Width - (this.document.settings.pageMargins * 2);
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        if (pageIndex > 0) {
+          pdf.addPage();
+        }
+
+        pdf.addImage(imgData, 'PNG', this.document.settings.pageMargins, this.document.settings.pageMargins, imgWidth, imgHeight);
+
+      } finally {
+        document.body.removeChild(tempDiv);
+      }
+    }
+
+    pdf.save(`${this.document.title || 'document'}.pdf`);
+  }
+
+  private paginateBlocksForExport(blocks: ContentBlock[], pageHeight: number): ContentBlock[][] {
+    const pages: ContentBlock[][] = [];
+    let currentPage: ContentBlock[] = [];
+    let currentHeight = 0;
+    const titleHeight = this.document.title ? 60 : 0; // Approximate title height
+
+    blocks.forEach((block) => {
+      const blockHeight = this.estimateBlockHeight(block);
+
+      if (currentHeight + blockHeight + titleHeight > pageHeight && currentPage.length > 0) {
+        pages.push(currentPage);
+        currentPage = [];
+        currentHeight = 0;
+      }
+
+      currentPage.push(block);
+      currentHeight += blockHeight;
+    });
+
+    if (currentPage.length > 0) {
+      pages.push(currentPage);
+    }
+
+    return pages;
+  }
+
+  private estimateBlockHeight(block: ContentBlock): number {
+    // Return the actual height if available, otherwise estimate
+    if (block.height) {
+      return block.height;
+    }
+
+    // Estimate based on block type and content
+    const baseHeight = 20; // Base line height
+    const fontSize = block.style.fontSize || 12;
+    const lineHeight = block.style.lineHeight || 1.6;
+    
+    switch (block.type) {
+      case 'heading':
+        const level = block.metadata?.level || 1;
+        return baseHeight * (level === 1 ? 2.5 : level === 2 ? 2 : 1.5);
+      case 'paragraph':
+        const lines = Math.ceil(block.content.length / 80); // Rough estimate
+        return lines * fontSize * lineHeight;
+      case 'list':
+        const items = block.content.split('\n').length;
+        return items * fontSize * lineHeight;
+      case 'table':
+        const rows = block.metadata?.tableData?.length || 1;
+        return rows * 30; // Approximate row height
+      default:
+        return baseHeight;
     }
   }
 

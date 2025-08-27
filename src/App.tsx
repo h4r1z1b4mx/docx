@@ -19,6 +19,10 @@ function App() {
     addBlock,
     updateBlock,
     deleteBlock,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useDocument();
 
   const [showExportModal, setShowExportModal] = useState(false);
@@ -51,7 +55,7 @@ function App() {
   };
 
   const handleStartProject = () => {
-    setShowTemplateSelection(true);
+    setShowHomepage(false); // Navigate to the editor page
   };
 
   const handleUpdateSelectedBlock = (updates: Partial<import('./types').ContentBlock>) => {
@@ -71,7 +75,7 @@ function App() {
       {showHomepage ? (
         <Homepage onStartProject={handleStartProject} />
       ) : (
-        <div className="h-screen flex flex-col bg-gray-50">
+        <div className="h-screen flex flex-col bg-white">
           <Header
             documentTitle="Visual Document Editor"
             onTitleChange={(title) => updateDocument({ title })}
@@ -79,6 +83,10 @@ function App() {
             onExport={() => setShowExportModal(true)}
             onSettings={() => {}}
             onTemplates={() => setShowTemplateSelection(true)}
+            onUndo={undo}
+            onRedo={redo}
+            canUndo={canUndo}
+            canRedo={canRedo}
           />
           
           <div className="flex-1 flex overflow-hidden">
@@ -95,6 +103,7 @@ function App() {
               onSelectBlock={setSelectedBlockId}
               onUpdateBlock={updateBlock}
               onDeleteBlock={deleteBlock}
+              onAddBlock={addBlock}
             />
             
             <Preview document={document} />

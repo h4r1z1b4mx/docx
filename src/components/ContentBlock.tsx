@@ -20,6 +20,7 @@ export const ContentBlock: React.FC<ContentBlockProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(block.content);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const blockRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -27,6 +28,16 @@ export const ContentBlock: React.FC<ContentBlockProps> = ({
       textareaRef.current.select();
     }
   }, [isEditing]);
+
+  // Auto-calculate block height
+  useEffect(() => {
+    if (blockRef.current) {
+      const height = blockRef.current.offsetHeight;
+      if (height !== block.height) {
+        onUpdate({ height });
+      }
+    }
+  }, [block.content, block.style, block.height, onUpdate]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -298,6 +309,7 @@ export const ContentBlock: React.FC<ContentBlockProps> = ({
 
   return (
     <div
+      ref={blockRef}
       className={`group relative transition-all duration-200 ${
         isSelected 
           ? 'ring-2 ring-primary-500 ring-opacity-50 bg-primary-50 bg-opacity-30' 

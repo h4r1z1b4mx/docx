@@ -5,7 +5,6 @@ import {
   AlignCenter, 
   AlignRight, 
   AlignJustify,
-  Bold,
   Italic,
   Underline,
   List,
@@ -16,8 +15,7 @@ import {
   Trash2,
   Quote,
   Table,
-  Strikethrough,
-  Palette
+  Strikethrough
 } from 'lucide-react';
 import { ContentBlock } from '../types';
 
@@ -52,65 +50,65 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   };
 
   return (
-    <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full">
+    <div className="w-80 bg-white border-r border-gray-100 flex flex-col h-full shadow-sm">
       {/* Add Content Section */}
-      <div className="p-4 border-b border-gray-200">
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">Add Content</h3>
+      <div className="p-4 border-b border-gray-100">
+        <h3 className="text-sm font-bold text-black mb-3">Add Content</h3>
         <div className="grid grid-cols-3 gap-2">
           <button
             onClick={() => onAddBlock('heading')}
-            className="flex flex-col items-center p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-colors group"
+            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
           >
-            <Type className="w-5 h-5 text-gray-600 group-hover:text-primary-600 mb-1" />
-            <span className="text-xs text-gray-600 group-hover:text-primary-600">Heading</span>
+            <Type className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
+            <span className="text-xs text-gray-700 group-hover:text-black font-medium">Heading</span>
           </button>
           
           <button
             onClick={() => onAddBlock('paragraph')}
-            className="flex flex-col items-center p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-colors group"
+            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
           >
-            <AlignLeft className="w-5 h-5 text-gray-600 group-hover:text-primary-600 mb-1" />
-            <span className="text-xs text-gray-600 group-hover:text-primary-600">Text</span>
+            <AlignLeft className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
+            <span className="text-xs text-gray-700 group-hover:text-black font-medium">Text</span>
           </button>
           
           <button
             onClick={() => onAddBlock('list')}
-            className="flex flex-col items-center p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-colors group"
+            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
           >
-            <List className="w-5 h-5 text-gray-600 group-hover:text-primary-600 mb-1" />
-            <span className="text-xs text-gray-600 group-hover:text-primary-600">List</span>
+            <List className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
+            <span className="text-xs text-gray-700 group-hover:text-black font-medium">List</span>
           </button>
           
           <button
             onClick={() => onAddBlock('quote')}
-            className="flex flex-col items-center p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-colors group"
+            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
           >
-            <Quote className="w-5 h-5 text-gray-600 group-hover:text-primary-600 mb-1" />
-            <span className="text-xs text-gray-600 group-hover:text-primary-600">Quote</span>
+            <Quote className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
+            <span className="text-xs text-gray-700 group-hover:text-black font-medium">Quote</span>
           </button>
           
           <button
             onClick={() => onAddBlock('table')}
-            className="flex flex-col items-center p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-colors group"
+            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
           >
-            <Table className="w-5 h-5 text-gray-600 group-hover:text-primary-600 mb-1" />
-            <span className="text-xs text-gray-600 group-hover:text-primary-600">Table</span>
+            <Table className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
+            <span className="text-xs text-gray-700 group-hover:text-black font-medium">Table</span>
           </button>
           
           <button
             onClick={() => onAddBlock('image')}
-            className="flex flex-col items-center p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-colors group"
+            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
           >
-            <Image className="w-5 h-5 text-gray-600 group-hover:text-primary-600 mb-1" />
-            <span className="text-xs text-gray-600 group-hover:text-primary-600">Image</span>
+            <Image className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
+            <span className="text-xs text-gray-700 group-hover:text-black font-medium">Image</span>
           </button>
           
           <button
             onClick={() => onAddBlock('divider')}
-            className="flex flex-col items-center p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-colors group col-span-3"
+            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group col-span-3 shadow-sm"
           >
-            <Minus className="w-5 h-5 text-gray-600 group-hover:text-primary-600 mb-1" />
-            <span className="text-xs text-gray-600 group-hover:text-primary-600">Divider</span>
+            <Minus className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
+            <span className="text-xs text-gray-700 group-hover:text-black font-medium">Divider</span>
           </button>
         </div>
       </div>
@@ -118,9 +116,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       {/* Format Section */}
       {selectedBlock && (
         <div className="flex-1 overflow-auto">
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-gray-100">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-900">Format</h3>
+              <h3 className="text-sm font-bold text-black">Format</h3>
               <button
                 onClick={onDeleteBlock}
                 className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
@@ -136,8 +134,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 onClick={() => toggleStyleProperty('italic')}
                 className={`p-2 rounded transition-colors ${
                   selectedBlock.style.italic
-                    ? 'bg-primary-600 text-white'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    ? 'bg-black text-white'
+                    : 'text-gray-700 hover:text-black hover:bg-gray-100'
                 }`}
                 title="Italic"
               >
@@ -148,8 +146,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 onClick={() => toggleStyleProperty('underline')}
                 className={`p-2 rounded transition-colors ${
                   selectedBlock.style.underline
-                    ? 'bg-primary-600 text-white'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    ? 'bg-black text-white'
+                    : 'text-gray-700 hover:text-black hover:bg-gray-100'
                 }`}
                 title="Underline"
               >
@@ -160,8 +158,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 onClick={() => toggleStyleProperty('strikethrough')}
                 className={`p-2 rounded transition-colors ${
                   selectedBlock.style.strikethrough
-                    ? 'bg-primary-600 text-white'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    ? 'bg-black text-white'
+                    : 'text-gray-700 hover:text-black hover:bg-gray-100'
                 }`}
                 title="Strikethrough"
               >

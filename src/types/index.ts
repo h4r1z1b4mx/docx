@@ -26,6 +26,7 @@ export interface ContentBlock {
     tableCols?: number;
     tableData?: string[][];
   };
+  height?: number; // Optional height property for page-wise content separation
 }
 
 export interface Document {
