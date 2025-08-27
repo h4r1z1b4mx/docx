@@ -64,24 +64,23 @@ export const Homepage: React.FC<HomepageProps> = ({ onStartProject }) => {
           {/* Main content */}
           <div className="text-center max-w-4xl">
             <h1 className="text-5xl lg:text-6xl font-bold text-black mb-6 leading-tight">
-              We didn't reinvent the<br />
-              wheel, just{' '}
+              Welcome to <br />
               <span className="relative inline-block">
                 <span className="bg-black text-white px-4 py-2 rounded-full transform -rotate-3 inline-block">
-                  design
+                  DocX Project
                 </span>
               </span>
             </h1>
-            
+
             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Design as you know it is out the door. Design as you want it just arrived.
+              DocX simplifies document creation and management with customizable templates and seamless export options.
             </p>
 
             <button 
               onClick={onStartProject}
               className="bg-black text-white px-8 py-3 rounded-lg font-semibold text-lg hover:bg-gray-800 transition-colors inline-flex items-center space-x-2 shadow-lg"
             >
-              <span>Our Project</span>
+              <span>Start Your Project</span>
               <ArrowDown className="w-5 h-5" />
             </button>
           </div>
@@ -90,41 +89,41 @@ export const Homepage: React.FC<HomepageProps> = ({ onStartProject }) => {
         {/* Process Steps Section - Right Side */}
         <aside className="w-96 bg-gray-50 flex items-center justify-center p-8">
           <div className="space-y-8">
-            {/* Step 1 - Subscribe */}
+            {/* Step 1 - Upload */}
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center flex-shrink-0">
                 <Mail className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-black mb-1">Subscribe</h3>
+                <h3 className="text-lg font-bold text-black mb-1">Upload</h3>
                 <p className="text-gray-600 text-sm">
-                  Choose a plan & request designs.
+                  Upload your documents or start with a template.
                 </p>
               </div>
             </div>
 
-            {/* Step 2 - Receive */}
+            {/* Step 2 - Edit */}
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center flex-shrink-0">
                 <Clock className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-black mb-1">Receive</h3>
+                <h3 className="text-lg font-bold text-black mb-1">Edit</h3>
                 <p className="text-gray-600 text-sm">
-                  Get designs within days.
+                  Customize your content with our intuitive editor.
                 </p>
               </div>
             </div>
 
-            {/* Step 3 - Check */}
+            {/* Step 3 - Export */}
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center flex-shrink-0">
                 <CheckCircle className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-black mb-1">Check</h3>
+                <h3 className="text-lg font-bold text-black mb-1">Export</h3>
                 <p className="text-gray-600 text-sm">
-                  Revisions until satisfied.
+                  Export your documents in multiple formats.
                 </p>
               </div>
             </div>
