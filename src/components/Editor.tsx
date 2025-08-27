@@ -96,48 +96,65 @@ export const Editor: React.FC<EditorProps> = ({
             )}
           </div>
         ) : (
-          pages.map((page, pageIndex) => (
-            <div
-              key={pageIndex}
-              className="bg-white shadow-2xl rounded-2xl min-h-[800px] p-12 relative border border-gray-100"
-              style={{ aspectRatio: '8.5/11' }}
-            >
-              <div className="space-y-2">
-                {page.map((block) => (
-                  <ContentBlock
-                    key={block.id}
-                    block={block}
-                    isSelected={selectedBlockId === block.id}
-                    onSelect={() => onSelectBlock(block.id)}
-                    onUpdate={(updates) => onUpdateBlock(block.id, updates)}
-                    onDelete={() => onDeleteBlock(block.id)}
-                  />
-                ))}
-              </div>
-              
-              {/* Page info and add button */}
-              <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center">
-                <span className="text-xs text-gray-500 font-medium">
-                  Page {pageIndex + 1} of {pages.length}
-                  {(() => {
-                    const currentPageHeight = page.reduce((total, block) => total + (block.height || 100), 0);
-                    const remainingSpace = PAGE_HEIGHT - currentPageHeight;
-                    return ` • ${remainingSpace}px remaining`;
-                  })()}
-                </span>
+          <>
+            {pages.map((page, pageIndex) => (
+              <div
+                key={pageIndex}
+                className="bg-white shadow-2xl rounded-2xl min-h-[800px] p-12 relative border border-gray-100"
+                style={{ aspectRatio: '8.5/11' }}
+              >
+                <div className="space-y-2">
+                  {page.map((block) => (
+                    <ContentBlock
+                      key={block.id}
+                      block={block}
+                      isSelected={selectedBlockId === block.id}
+                      onSelect={() => onSelectBlock(block.id)}
+                      onUpdate={(updates) => onUpdateBlock(block.id, updates)}
+                      onDelete={() => onDeleteBlock(block.id)}
+                    />
+                  ))}
+                </div>
                 
-                {onAddBlock && (
-                  <button
-                    onClick={() => handleAddBlockToPage('paragraph', pageIndex)}
-                    className="bg-black text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-800 transition-colors shadow-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={!canAddBlockToPage(pageIndex)}
-                  >
-                    + Add Content
-                  </button>
-                )}
+                {/* Page info and add button */}
+                <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center">
+                  <span className="text-xs text-gray-500 font-medium">
+                    Page {pageIndex + 1} of {pages.length}
+                    {(() => {
+                      const currentPageHeight = page.reduce((total, block) => total + (block.height || 100), 0);
+                      const remainingSpace = PAGE_HEIGHT - currentPageHeight;
+                      return ` • ${remainingSpace}px remaining`;
+                    })()}
+                  </span>
+                  
+                  {onAddBlock && (
+                    <button
+                      onClick={() => handleAddBlockToPage('paragraph', pageIndex)}
+                      className="bg-black text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-800 transition-colors shadow-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!canAddBlockToPage(pageIndex)}
+                    >
+                      + Add Content
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))
+            ))}
+            
+            {/* Add New Page Button */}
+            {onAddBlock && (
+              <div className="flex justify-center">
+                <button
+                  onClick={() => handleAddBlockToPage('paragraph', pages.length)}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm hover:bg-blue-700 transition-colors shadow-lg font-medium flex items-center space-x-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  <span>Add New Page</span>
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

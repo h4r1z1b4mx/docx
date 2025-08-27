@@ -21,6 +21,7 @@ export const ContentBlock: React.FC<ContentBlockProps> = ({
   const [editContent, setEditContent] = useState(block.content);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const blockRef = useRef<HTMLDivElement>(null);
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -28,6 +29,15 @@ export const ContentBlock: React.FC<ContentBlockProps> = ({
       textareaRef.current.select();
     }
   }, [isEditing]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Auto-calculate block height
   useEffect(() => {
@@ -42,6 +52,25 @@ export const ContentBlock: React.FC<ContentBlockProps> = ({
   const handleEdit = () => {
     setIsEditing(true);
     setEditContent(block.content);
+  };
+
+  const handleDoubleClick = () => {
+    if (block.type !== 'table' && block.type !== 'divider' && block.type !== 'image' && block.type !== 'pagebreak') {
+      // Clear any pending single click
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+        clickTimeoutRef.current = null;
+      }
+      handleEdit();
+    }
+  };
+
+  const handleSingleClick = () => {
+    // Delay selection to allow for potential double-click
+    clickTimeoutRef.current = setTimeout(() => {
+      onSelect();
+      clickTimeoutRef.current = null;
+    }, 200);
   };
 
   const handleSave = () => {
@@ -166,30 +195,47 @@ export const ContentBlock: React.FC<ContentBlockProps> = ({
     }
 
     switch (block.type) {
-      case 'heading':
+      case 'heading': {
         const HeadingTag = `h${block.metadata?.level || 1}` as keyof JSX.IntrinsicElements;
         return (
-          <HeadingTag style={style} className="outline-none">
+          <HeadingTag 
+            style={style} 
+            className="outline-none cursor-pointer" 
+            onDoubleClick={handleDoubleClick}
+            title="Double-click to edit"
+          >
             {block.content}
           </HeadingTag>
         );
+      }
 
       case 'paragraph':
         return (
-          <p style={style} className="outline-none">
+          <p 
+            style={style} 
+            className="outline-none cursor-pointer" 
+            onDoubleClick={handleDoubleClick}
+            title="Double-click to edit"
+          >
             {block.content}
           </p>
         );
 
-      case 'list':
+      case 'list': {
         const ListTag = block.metadata?.listType === 'numbered' ? 'ol' : 'ul';
         return (
-          <ListTag style={style} className="outline-none pl-6">
+          <ListTag 
+            style={style} 
+            className="outline-none pl-6 cursor-pointer" 
+            onDoubleClick={handleDoubleClick}
+            title="Double-click to edit"
+          >
             {block.content.split('\n').map((item, index) => (
               <li key={index}>{item}</li>
             ))}
           </ListTag>
         );
+      }
 
       case 'quote':
         return (
@@ -201,7 +247,9 @@ export const ContentBlock: React.FC<ContentBlockProps> = ({
               fontStyle: 'italic',
               color: '#6b7280'
             }} 
-            className="outline-none"
+            className="outline-none cursor-pointer"
+            onDoubleClick={handleDoubleClick}
+            title="Double-click to edit"
           >
             {block.content}
           </blockquote>
@@ -302,6 +350,24 @@ export const ContentBlock: React.FC<ContentBlockProps> = ({
           />
         );
 
+      case 'pagebreak':
+        return (
+          <div 
+            style={{
+              marginTop: `${block.style.marginTop}px`,
+              marginBottom: `${block.style.marginBottom}px`,
+            }}
+            className="border-2 border-dashed border-blue-300 bg-blue-50 rounded-lg p-4 text-center text-blue-600 text-sm font-medium outline-none"
+          >
+            <div className="flex items-center justify-center space-x-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>Page Break</span>
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -315,7 +381,7 @@ export const ContentBlock: React.FC<ContentBlockProps> = ({
           ? 'ring-2 ring-primary-500 ring-opacity-50 bg-primary-50 bg-opacity-30' 
           : 'hover:bg-gray-50'
       } rounded-lg`}
-      onClick={onSelect}
+      onClick={handleSingleClick}
     >
       {/* Drag handle and edit button */}
       <div className={`absolute left-0 top-0 flex items-center space-x-1 transform -translate-x-8 transition-opacity ${
@@ -334,7 +400,7 @@ export const ContentBlock: React.FC<ContentBlockProps> = ({
               handleEdit();
             }}
             className="p-1 text-gray-400 hover:text-gray-600"
-            title="Edit content"
+            title="Edit content (or double-click)"
           >
             <Edit3 className="w-4 h-4" />
           </button>

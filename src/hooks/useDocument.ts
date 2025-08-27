@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Document, ContentBlock } from '../types';
 
@@ -18,28 +18,18 @@ const defaultDocument: Document = {
 };
 
 export const useDocument = () => {
-  const [document, setDocument] = useState<Document>({
+  const initialDoc = {
     ...defaultDocument,
     id: uuidv4(),
-  });
+  };
 
+  const [document, setDocument] = useState<Document>(initialDoc);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   
   // Undo/Redo functionality
-  const [history, setHistory] = useState<Document[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [history, setHistory] = useState<Document[]>([initialDoc]);
+  const [historyIndex, setHistoryIndex] = useState(0);
   const isUndoRedoAction = useRef(false);
-
-  // Initialize history with the initial document
-  useEffect(() => {
-    if (history.length === 0) {
-      const initialDoc = {
-        ...document,
-      };
-      setHistory([initialDoc]);
-      setHistoryIndex(0);
-    }
-  }, [document, history.length]);
 
   const saveToHistory = useCallback((newDocument: Document) => {
     if (isUndoRedoAction.current) {
@@ -55,37 +45,46 @@ export const useDocument = () => {
       return updatedHistory.slice(-50);
     });
     
-    setHistoryIndex(prev => prev + 1);
+    setHistoryIndex(prev => {
+      const newIndex = Math.min(prev + 1, 49); // Ensure index doesn't exceed max
+      return newIndex;
+    });
   }, [historyIndex]);
 
   const undo = useCallback(() => {
-    if (historyIndex > 0) {
-      isUndoRedoAction.current = true;
-      const previousState = history[historyIndex - 1];
-      setDocument({ ...previousState });
-      setHistoryIndex(prev => prev - 1);
-      // Reset the flag after the next render
-      setTimeout(() => {
-        isUndoRedoAction.current = false;
-      }, 0);
+    if (historyIndex > 0 && history.length > 0) {
+      const newIndex = historyIndex - 1;
+      if (history[newIndex]) {
+        isUndoRedoAction.current = true;
+        const previousState = history[newIndex];
+        setDocument({ ...previousState });
+        setHistoryIndex(newIndex);
+        // Reset the flag after the next render
+        setTimeout(() => {
+          isUndoRedoAction.current = false;
+        }, 0);
+      }
     }
   }, [history, historyIndex]);
 
   const redo = useCallback(() => {
-    if (historyIndex < history.length - 1) {
-      isUndoRedoAction.current = true;
-      const nextState = history[historyIndex + 1];
-      setDocument({ ...nextState });
-      setHistoryIndex(prev => prev + 1);
-      // Reset the flag after the next render
-      setTimeout(() => {
-        isUndoRedoAction.current = false;
-      }, 0);
+    if (historyIndex < history.length - 1 && history.length > 0) {
+      const newIndex = historyIndex + 1;
+      if (history[newIndex]) {
+        isUndoRedoAction.current = true;
+        const nextState = history[newIndex];
+        setDocument({ ...nextState });
+        setHistoryIndex(newIndex);
+        // Reset the flag after the next render
+        setTimeout(() => {
+          isUndoRedoAction.current = false;
+        }, 0);
+      }
     }
   }, [history, historyIndex]);
 
-  const canUndo = historyIndex > 0;
-  const canRedo = historyIndex < history.length - 1;
+  const canUndo = historyIndex > 0 && history.length > 1;
+  const canRedo = historyIndex < history.length - 1 && history.length > 0;
 
   const updateDocument = useCallback((updates: Partial<Document>) => {
     const newDocument = {
@@ -207,6 +206,8 @@ function getDefaultContent(type: ContentBlock['type']): string {
       return 'Image placeholder';
     case 'divider':
       return '';
+    case 'pagebreak':
+      return '';
     default:
       return '';
   }
@@ -224,6 +225,8 @@ function getDefaultFontSize(type: ContentBlock['type']): number {
       return 18;
     case 'table':
       return 14;
+    case 'pagebreak':
+      return 12;
     default:
       return 16;
   }

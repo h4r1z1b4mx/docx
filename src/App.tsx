@@ -7,6 +7,7 @@ import { Editor } from './components/Editor';
 import { Preview } from './components/Preview';
 import { ExportModal } from './components/ExportModal';
 import TemplateSelection from './components/TemplateSelection';
+import SaveTemplateModal from './components/SaveTemplateModal';
 import { Homepage } from './components/Homepage';
 import { useDocument } from './hooks/useDocument';
 
@@ -27,6 +28,7 @@ function App() {
 
   const [showExportModal, setShowExportModal] = useState(false);
   const [showTemplateSelection, setShowTemplateSelection] = useState(false);
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [showHomepage, setShowHomepage] = useState(true);
 
   const selectedBlock = document.blocks.find(block => block.id === selectedBlockId) || null;
@@ -83,6 +85,7 @@ function App() {
             onExport={() => setShowExportModal(true)}
             onSettings={() => {}}
             onTemplates={() => setShowTemplateSelection(true)}
+            onSaveAsTemplate={() => setShowSaveTemplateModal(true)}
             onUndo={undo}
             onRedo={redo}
             canUndo={canUndo}
@@ -113,6 +116,44 @@ function App() {
             isOpen={showExportModal}
             onClose={() => setShowExportModal(false)}
             document={document}
+          />
+
+          <SaveTemplateModal
+            isOpen={showSaveTemplateModal}
+            onClose={() => setShowSaveTemplateModal(false)}
+            document={document}
+            onTemplateSaved={() => {
+              // Show success notification
+              const notification = window.document.createElement('div');
+              notification.className = 'fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+              notification.textContent = 'Template saved successfully!';
+              window.document.body.appendChild(notification);
+              
+              setTimeout(() => {
+                if (window.document.body.contains(notification)) {
+                  window.document.body.removeChild(notification);
+                }
+              }, 3000);
+            }}
+          />
+
+          <SaveTemplateModal
+            isOpen={showSaveTemplateModal}
+            onClose={() => setShowSaveTemplateModal(false)}
+            document={document}
+            onTemplateSaved={() => {
+              // Show success notification
+              const notification = window.document.createElement('div');
+              notification.className = 'fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+              notification.textContent = 'Template saved successfully!';
+              window.document.body.appendChild(notification);
+              
+              setTimeout(() => {
+                if (window.document.body.contains(notification)) {
+                  window.document.body.removeChild(notification);
+                }
+              }, 3000);
+            }}
           />
         </div>
       )}

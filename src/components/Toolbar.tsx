@@ -15,7 +15,8 @@ import {
   Trash2,
   Quote,
   Table,
-  Strikethrough
+  Strikethrough,
+  FileText
 } from 'lucide-react';
 import { ContentBlock } from '../types';
 
@@ -105,10 +106,18 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           
           <button
             onClick={() => onAddBlock('divider')}
-            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group col-span-3 shadow-sm"
+            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
           >
             <Minus className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
             <span className="text-xs text-gray-700 group-hover:text-black font-medium">Divider</span>
+          </button>
+          
+          <button
+            onClick={() => onAddBlock('pagebreak')}
+            className="flex flex-col items-center p-3 border-2 border-gray-300 rounded-lg hover:border-black hover:bg-gray-50 transition-colors group shadow-sm"
+          >
+            <FileText className="w-5 h-5 text-gray-700 group-hover:text-black mb-1" />
+            <span className="text-xs text-gray-700 group-hover:text-black font-medium">Page Break</span>
           </button>
         </div>
       </div>

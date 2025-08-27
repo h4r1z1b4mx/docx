@@ -1,5 +1,5 @@
 import React from 'react';
-import { Save, Download, Settings, Undo, Redo, Layout } from 'lucide-react';
+import { Save, Download, Settings, Undo, Redo, Layout, FileText } from 'lucide-react';
 
 interface HeaderProps {
   documentTitle: string;
@@ -8,6 +8,7 @@ interface HeaderProps {
   onExport: () => void;
   onSettings: () => void;
   onTemplates?: () => void;
+  onSaveAsTemplate?: () => void;
   onUndo?: () => void;
   onRedo?: () => void;
   canUndo?: boolean;
@@ -21,6 +22,7 @@ export const Header: React.FC<HeaderProps> = ({
   onExport,
   onSettings,
   onTemplates,
+  onSaveAsTemplate,
   onUndo,
   onRedo,
   canUndo = false,
@@ -91,6 +93,17 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Layout className="w-4 h-4" />
             <span className="text-sm">Templates</span>
+          </button>
+        )}
+
+        {onSaveAsTemplate && (
+          <button
+            onClick={onSaveAsTemplate}
+            className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-black hover:bg-gray-50 rounded-lg transition-colors font-medium"
+            title="Save current document as template"
+          >
+            <FileText className="w-4 h-4" />
+            <span className="text-sm">Save as Template</span>
           </button>
         )}
 
