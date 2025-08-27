@@ -9,7 +9,7 @@ const defaultDocument: Document = {
   blocks: [],
   lastModified: new Date(),
   settings: {
-    pageMargins: 72,
+    pageMargins: 36,
     pageSize: 'A4',
     fontFamily: 'Inter',
     pageOrientation: 'portrait',

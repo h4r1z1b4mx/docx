@@ -89,7 +89,7 @@ export class DocumentExporter {
     const alignment = this.getDocxAlignment(block.style.textAlign);
     
     switch (block.type) {
-      case 'heading':
+      case 'heading': {
         const level = Math.min(block.metadata?.level || 1, 6) as 1 | 2 | 3 | 4 | 5 | 6;
         const headingLevels = {
           1: HeadingLevel.HEADING_1,
@@ -105,6 +105,7 @@ export class DocumentExporter {
           heading: headingLevels[level],
           alignment,
         });
+      }
 
       case 'paragraph':
         return new Paragraph({
@@ -214,12 +215,13 @@ export class DocumentExporter {
       tempDiv.style.width = `${a4Width - (this.document.settings.pageMargins * 2)}pt`;
       tempDiv.style.padding = `${this.document.settings.pageMargins}pt`;
       tempDiv.style.backgroundColor = 'white';
-      tempDiv.style.fontFamily = this.document.settings.fontFamily;
+      tempDiv.style.fontFamily = '"Times New Roman", serif';
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
       tempDiv.style.top = '0';
       tempDiv.style.fontSize = '12px';
       tempDiv.style.lineHeight = '1.6';
+      tempDiv.style.color = '#000';
 
       // Add title only to the first page
       if (pageIndex === 0 && this.document.title) {
@@ -227,8 +229,11 @@ export class DocumentExporter {
         titleEl.textContent = this.document.title;
         titleEl.style.textAlign = 'center';
         titleEl.style.marginBottom = '20px';
-        titleEl.style.fontSize = '20px';
+        titleEl.style.fontSize = '16px';
         titleEl.style.fontWeight = 'bold';
+        titleEl.style.fontFamily = '"Times New Roman", serif';
+        titleEl.style.color = '#000';
+        titleEl.style.marginTop = '0';
         tempDiv.appendChild(titleEl);
       }
 
@@ -307,18 +312,22 @@ export class DocumentExporter {
     const lineHeight = block.style.lineHeight || 1.6;
     
     switch (block.type) {
-      case 'heading':
+      case 'heading': {
         const level = block.metadata?.level || 1;
         return baseHeight * (level === 1 ? 2.5 : level === 2 ? 2 : 1.5);
-      case 'paragraph':
+      }
+      case 'paragraph': {
         const lines = Math.ceil(block.content.length / 80); // Rough estimate
         return lines * fontSize * lineHeight;
-      case 'list':
+      }
+      case 'list': {
         const items = block.content.split('\n').length;
         return items * fontSize * lineHeight;
-      case 'table':
+      }
+      case 'table': {
         const rows = block.metadata?.tableData?.length || 1;
         return rows * 30; // Approximate row height
+      }
       default:
         return baseHeight;
     }
@@ -422,62 +431,98 @@ export class DocumentExporter {
   }
 
   private blockToHtml(block: ContentBlock): HTMLElement | null {
-    const style = `
-      font-size: ${block.style.fontSize}px;
-      font-weight: ${block.style.fontWeight};
-      text-align: ${block.style.textAlign};
-      color: ${block.style.color};
-      margin-top: ${block.style.marginTop}px;
-      margin-bottom: ${block.style.marginBottom}px;
-      line-height: ${block.style.lineHeight};
-      ${block.style.backgroundColor ? `background-color: ${block.style.backgroundColor};` : ''}
-      ${block.style.italic ? 'font-style: italic;' : ''}
-      ${block.style.underline ? 'text-decoration: underline;' : ''}
-      ${block.style.strikethrough ? 'text-decoration: line-through;' : ''}
+    // Use academic formatting to match the preview
+    const baseStyle = `
+      font-family: 'Times New Roman', serif;
+      color: #000;
+      margin-top: ${block.style.marginTop || 12}px;
+      margin-bottom: ${block.style.marginBottom || 12}px;
+      line-height: 1.6;
     `;
 
     switch (block.type) {
-      case 'heading':
+      case 'heading': {
         const level = Math.min(block.metadata?.level || 1, 6);
         const heading = document.createElement(`h${level}`);
         heading.textContent = block.content;
-        heading.style.cssText = style;
+        
+        // Academic heading styling
+        const fontSize = level === 1 ? '16px' : level === 2 ? '14px' : '13px';
+        const marginTop = level === 1 ? '30px' : '20px';
+        const marginBottom = level === 1 ? '20px' : '15px';
+        const headingAlign = level === 1 ? 'center' : 'left';
+        
+        heading.style.cssText = `${baseStyle} 
+          font-size: ${fontSize}; 
+          font-weight: bold; 
+          text-align: ${headingAlign}; 
+          margin-top: ${marginTop}; 
+          margin-bottom: ${marginBottom}; 
+          page-break-after: avoid;`;
         return heading;
+      }
 
-      case 'paragraph':
+      case 'paragraph': {
         const p = document.createElement('p');
         p.textContent = block.content;
-        p.style.cssText = style;
+        const paragraphAlign = block.style.textAlign === 'center' ? 'center' : 'justify';
+        const textIndent = paragraphAlign === 'justify' ? '36pt' : '0'; // 0.5 inch indent
+        
+        p.style.cssText = `${baseStyle} 
+          font-size: ${block.style.fontSize || 12}px; 
+          text-align: ${paragraphAlign}; 
+          text-indent: ${textIndent};`;
         return p;
+      }
 
-      case 'list':
+      case 'list': {
         const listTag = block.metadata?.listType === 'numbered' ? 'ol' : 'ul';
         const list = document.createElement(listTag);
-        list.style.cssText = style;
+        list.style.cssText = `${baseStyle} 
+          padding-left: 36pt; 
+          margin-left: 0;`; // 0.5 inch padding
+        
         block.content.split('\n').forEach(item => {
           const li = document.createElement('li');
           li.textContent = item;
+          li.style.cssText = 'margin-bottom: 6px; text-align: justify;';
           list.appendChild(li);
         });
         return list;
+      }
 
-      case 'quote':
+      case 'quote': {
         const blockquote = document.createElement('blockquote');
         blockquote.textContent = block.content;
-        blockquote.style.cssText = style + 'border-left: 4px solid #ccc; padding-left: 16px; font-style: italic;';
+        blockquote.style.cssText = `${baseStyle} 
+          border-left: none; 
+          padding-left: 36pt; 
+          padding-right: 36pt; 
+          font-style: italic; 
+          text-align: justify; 
+          margin: 20px 0;`;
         return blockquote;
+      }
 
-      case 'table':
+      case 'table': {
         if (block.metadata?.tableData) {
           const table = document.createElement('table');
-          table.style.cssText = style + 'border-collapse: collapse; width: 100%;';
+          table.style.cssText = `${baseStyle} 
+            border-collapse: collapse; 
+            width: 100%; 
+            margin: 20px 0;`;
           
           block.metadata.tableData.forEach(rowData => {
             const tr = document.createElement('tr');
             rowData.forEach(cellData => {
               const td = document.createElement('td');
               td.textContent = cellData;
-              td.style.cssText = 'border: 1px solid #ccc; padding: 8px;';
+              td.style.cssText = `
+                border: 1px solid #000; 
+                padding: 8px; 
+                text-align: center; 
+                font-size: 12px; 
+                font-family: 'Times New Roman', serif;`;
               tr.appendChild(td);
             });
             table.appendChild(tr);
@@ -485,16 +530,19 @@ export class DocumentExporter {
           return table;
         }
         return null;
+      }
 
-      case 'divider':
+      case 'divider': {
         const hr = document.createElement('hr');
-        hr.style.cssText = style;
+        hr.style.cssText = `${baseStyle} border: none; border-top: 1px solid #000;`;
         return hr;
+      }
 
-      case 'pagebreak':
+      case 'pagebreak': {
         const pageBreak = document.createElement('div');
         pageBreak.style.cssText = 'page-break-before: always; height: 0; margin: 0; padding: 0;';
         return pageBreak;
+      }
 
       default:
         return null;
@@ -502,41 +550,58 @@ export class DocumentExporter {
   }
 
   private blockToHtmlString(block: ContentBlock): string | null {
-    const style = `style="
-      font-size: ${block.style.fontSize}px;
-      font-weight: ${block.style.fontWeight};
-      text-align: ${block.style.textAlign};
-      color: ${block.style.color};
-      margin-top: ${block.style.marginTop}px;
-      margin-bottom: ${block.style.marginBottom}px;
-      line-height: ${block.style.lineHeight};
-      ${block.style.backgroundColor ? `background-color: ${block.style.backgroundColor};` : ''}
-      ${block.style.italic ? 'font-style: italic;' : ''}
-      ${block.style.underline ? 'text-decoration: underline;' : ''}
-      ${block.style.strikethrough ? 'text-decoration: line-through;' : ''}
-    "`;
+    // Use academic formatting to match the preview
+    const baseStyle = `font-family: 'Times New Roman', serif; color: #000; line-height: 1.6;`;
 
     switch (block.type) {
-      case 'heading':
+      case 'heading': {
         const level = Math.min(block.metadata?.level || 1, 6);
+        const fontSize = level === 1 ? '16px' : level === 2 ? '14px' : '13px';
+        const marginTop = level === 1 ? '30px' : '20px';
+        const marginBottom = level === 1 ? '20px' : '15px';
+        const headingAlign = level === 1 ? 'center' : 'left';
+        const style = `style="${baseStyle} font-size: ${fontSize}; font-weight: bold; text-align: ${headingAlign}; margin-top: ${marginTop}; margin-bottom: ${marginBottom}; page-break-after: avoid;"`;
         return `<h${level} ${style}>${block.content}</h${level}>`;
+      }
 
-      case 'paragraph':
+      case 'paragraph': {
+        const paragraphAlign = block.style.textAlign === 'center' ? 'center' : 'justify';
+        const textIndent = paragraphAlign === 'justify' ? '36pt' : '0';
+        const style = `style="${baseStyle} font-size: ${block.style.fontSize || 12}px; text-align: ${paragraphAlign}; text-indent: ${textIndent}; margin-top: 12px; margin-bottom: 12px;"`;
         return `<p ${style}>${block.content}</p>`;
+      }
 
-      case 'list':
+      case 'list': {
         const listTag = block.metadata?.listType === 'numbered' ? 'ol' : 'ul';
-        const items = block.content.split('\n').map(item => `<li>${item}</li>`).join('');
+        const items = block.content.split('\n').map(item => `<li style="margin-bottom: 6px; text-align: justify;">${item}</li>`).join('');
+        const style = `style="${baseStyle} padding-left: 36pt; margin-left: 0; margin-top: 12px; margin-bottom: 12px;"`;
         return `<${listTag} ${style}>${items}</${listTag}>`;
+      }
 
-      case 'quote':
-        return `<blockquote ${style} style="border-left: 4px solid #ccc; padding-left: 16px; font-style: italic;">${block.content}</blockquote>`;
+      case 'quote': {
+        const style = `style="${baseStyle} border-left: none; padding-left: 36pt; padding-right: 36pt; font-style: italic; text-align: justify; margin: 20px 0;"`;
+        return `<blockquote ${style}>${block.content}</blockquote>`;
+      }
 
-      case 'divider':
+      case 'table': {
+        if (block.metadata?.tableData) {
+          const tableStyle = `style="${baseStyle} border-collapse: collapse; width: 100%; margin: 20px 0;"`;
+          const rows = block.metadata.tableData.map((rowData: string[]) => 
+            `<tr>${rowData.map(cell => `<td style="border: 1px solid #000; padding: 8px; text-align: center; font-size: 12px; font-family: 'Times New Roman', serif;">${cell}</td>`).join('')}</tr>`
+          ).join('');
+          return `<table ${tableStyle}>${rows}</table>`;
+        }
+        return null;
+      }
+
+      case 'divider': {
+        const style = `style="${baseStyle} border: none; border-top: 1px solid #000; margin-top: 12px; margin-bottom: 12px;"`;
         return `<hr ${style}>`;
+      }
 
-      case 'pagebreak':
+      case 'pagebreak': {
         return `<div style="page-break-before: always; height: 0; margin: 0; padding: 0;"></div>`;
+      }
 
       default:
         return null;
@@ -545,16 +610,18 @@ export class DocumentExporter {
 
   private blockToMarkdown(block: ContentBlock): string | null {
     switch (block.type) {
-      case 'heading':
+      case 'heading': {
         const level = block.metadata?.level || 1;
         return `${'#'.repeat(level)} ${block.content}`;
+      }
 
       case 'paragraph':
         return block.content;
 
-      case 'list':
+      case 'list': {
         const prefix = block.metadata?.listType === 'numbered' ? '1.' : '-';
         return block.content.split('\n').map(item => `${prefix} ${item}`).join('\n');
+      }
 
       case 'quote':
         return `> ${block.content}`;
@@ -572,18 +639,20 @@ export class DocumentExporter {
 
   private blockToLatex(block: ContentBlock): string | null {
     switch (block.type) {
-      case 'heading':
+      case 'heading': {
         const level = block.metadata?.level || 1;
         const command = level === 1 ? 'section' : level === 2 ? 'subsection' : 'subsubsection';
         return `\\${command}{${block.content}}`;
+      }
 
       case 'paragraph':
         return block.content;
 
-      case 'list':
+      case 'list': {
         const listType = block.metadata?.listType === 'numbered' ? 'enumerate' : 'itemize';
         const items = block.content.split('\n').map(item => `  \\item ${item}`).join('\n');
         return `\\begin{${listType}}\n${items}\n\\end{${listType}}`;
+      }
 
       case 'quote':
         return `\\begin{quote}\n${block.content}\n\\end{quote}`;
@@ -601,10 +670,11 @@ export class DocumentExporter {
 
   private blockToText(block: ContentBlock): string | null {
     switch (block.type) {
-      case 'heading':
+      case 'heading': {
         const level = block.metadata?.level || 1;
         const underline = '='.repeat(block.content.length);
         return level === 1 ? `${block.content}\n${underline}` : `${block.content}\n${'-'.repeat(block.content.length)}`;
+      }
 
       case 'paragraph':
         return block.content;
